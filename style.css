@@ -1,0 +1,236 @@
+/* ===== General Styles ===== */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  background: #111;
+  color: #fff;
+}
+
+header {
+  background: #1c1c1c;
+  padding: 15px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.7);
+}
+
+header h1 {
+  font-size: 32px;
+  color: #ff4c00;
+  margin: 0;
+}
+
+#logoutBtn {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  padding: 5px 12px;
+  background: #ff4c00;
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  display:none;
+}
+
+#logoutBtn:hover {
+  background: #e04300;
+}
+
+/* ===== Auth Box ===== */
+.container {
+  width: 350px;
+  margin: 80px auto;
+  background: #1c1c1c;
+  padding: 25px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 0 15px rgba(255,76,0,0.4);
+}
+
+input, select {
+  width: 90%;
+  padding: 10px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 5px;
+  background: #333;
+  color: #fff;
+  font-size: 14px;
+}
+
+input::placeholder {
+  color: #aaa;
+}
+
+button {
+  padding: 10px 20px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 5px;
+  background: #ff4c00;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  transition: 0.3s;
+}
+
+button:hover {
+  background: #e04300;
+}
+
+a {
+  color: #ff4c00;
+  cursor: pointer;
+}
+
+/* ===== Home Options ===== */
+.home-options {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.home-options button {
+  margin: 0 10px;
+  padding: 10px 20px;
+  background: #222;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.home-options button:hover {
+  background: #ff4c00;
+}
+
+/* ===== Admin Panel ===== */
+#adminPanel {
+  background: #222;
+  padding: 15px;
+  margin: 15px;
+  border-radius: 10px;
+}
+
+#adminPanel h2 {
+  color: #ff4c00;
+  text-align: center;
+}
+
+#episodesContainer input {
+  margin: 5px 0;
+}
+
+/* ===== Content Grid ===== */
+.movie-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(180px,1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.movie-item {
+  background: #1c1c1c;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  text-align: center;
+  transition: 0.3s;
+  box-shadow: 0 0 10px rgba(255,76,0,0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.movie-item img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+}
+
+.movie-item h3 {
+  margin: 8px 0;
+  font-size: 16px;
+  color: #ff4c00;
+}
+
+/* ===== Admin Buttons (Edit / Delete) ===== */
+.movie-item button {
+    display: inline-block;
+    margin: 5px 5px 10px 5px;
+    padding: 5px 10px;
+    font-size: 13px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    transition: 0.3s;
+    width: 80px;
+}
+
+.movie-item button:nth-child(3) { /* Edit button */
+    background: #00aaff;
+    color: #fff;
+}
+
+.movie-item button:nth-child(3):hover {
+    background: #0088cc;
+}
+
+.movie-item button:nth-child(4) { /* Delete button */
+    background: #ff4c00;
+    color: #fff;
+}
+
+.movie-item button:nth-child(4):hover {
+    background: #e04300;
+}
+
+.movie-item:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(255,76,0,0.5);
+}
+
+/* ===== Video Player Popup ===== */
+.popup {
+  display: none;
+  position: fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background: rgba(0,0,0,0.9);
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.popup-content {
+  width: 80%;
+  max-width: 900px;
+  position: relative;
+  text-align: center;
+}
+
+.popup-content video {
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+
+.popup .close {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  font-size: 28px;
+  color: #ff4c00;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.popup .close:hover {
+  color: #e04300;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px){
+  .container { width: 90%; }
+  .movie-grid { grid-template-columns: repeat(auto-fill,minmax(140px,1fr)); }
+}

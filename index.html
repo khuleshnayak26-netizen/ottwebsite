@@ -1,461 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>My OTT</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <!-- HLS for .m3u8 playback -->
-  <script defer src="https://unpkg.com/hls.js@latest"></script>
-  <style>
-    :root{
-      --bg:#0b0f14; --panel:#121821; --soft:#192231; --accent:#6ee7ff; --text:#e8eef7; --muted:#a9b1bd; --danger:#ff6b6b; --ok:#58f7a3;
-      --card:#0f1622; --chip:#203047; --ring:#2b3b55; --shadow: 0 10px 30px rgba(0,0,0,.35);
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(120deg,var(--bg),#0a0e13 60%, #0d1219);color:var(--text)}
-    .app{display:grid;grid-template-rows:auto 1fr;min-height:100vh}
-    header{position:sticky;top:0;z-index:50;background:linear-gradient(180deg,rgba(13,19,28,.95),rgba(13,19,28,.75));backdrop-filter:saturate(140%) blur(10px);box-shadow:0 2px 0 rgba(255,255,255,.02)}
-    .nav{display:flex;align-items:center;gap:14px;padding:14px clamp(14px,3vw,28px)}
-    .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.3px}
-    .logo{width:34px;height:34px;border-radius:10px;background:radial-gradient(100% 100% at 20% 20%,#28d7ff, #8a5bff 45%, #ff2f7b);box-shadow:inset 0 0 30px rgba(255,255,255,.28), 0 6px 24px rgba(0,0,0,.5)}
-    .brand span{font-size:1.05rem}
-    .search{flex:1;display:flex;gap:10px}
-    .search input{flex:1;background:var(--soft);border:1px solid var(--ring);color:var(--text);padding:12px 14px;border-radius:14px;outline:none}
-    .chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:var(--chip);border:1px solid var(--ring);color:#d7e2f2;font-size:.9rem}
-    .btn{appearance:none;border:1px solid var(--ring);background:linear-gradient(180deg,#1a2230,#152033);color:var(--text);padding:10px 14px;border-radius:12px;cursor:pointer;box-shadow:var(--shadow);transition:transform .1s ease,opacity .2s ease}
-    .btn:hover{transform:translateY(-1px)}
-    .btn.primary{background:linear-gradient(180deg,#26b8ff,#1a7bff);border-color:#2a9dff;color:#071423}
-    .btn.ghost{background:transparent;box-shadow:none}
-
-    .main{padding:16px clamp(14px,3vw,28px) 30px}
-    .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:18px}
-    .grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:16px}
-    @media (max-width:1200px){.grid{grid-template-columns:repeat(5,1fr)}}
-    @media (max-width:992px){.grid{grid-template-columns:repeat(4,1fr)}}
-    @media (max-width:768px){.grid{grid-template-columns:repeat(3,1fr)}}
-    @media (max-width:540px){.grid{grid-template-columns:repeat(2,1fr)}}
-
-    .card{position:relative;overflow:hidden;border-radius:16px;background:linear-gradient(180deg,var(--card),#0c1320);border:1px solid var(--ring);box-shadow:var(--shadow);cursor:pointer}
-    .poster{width:100%;aspect-ratio:2/3;background:#0b1524 center/cover no-repeat;display:block}
-    .meta{padding:10px 12px 12px}
-    .title{font-weight:700;font-size:.95rem;line-height:1.2}
-    .sub{font-size:.8rem;color:var(--muted);margin-top:2px}
-    .badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.6);border:1px solid var(--ring);color:#dff8ff;padding:4px 8px;border-radius:999px;font-size:.72rem}
-    .duration{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.6);border:1px solid var(--ring);color:#fff;padding:4px 8px;border-radius:8px;font-size:.75rem}
-
-    .empty{padding:40px;border:1px dashed var(--ring);border-radius:16px;text-align:center;background:rgba(32,48,71,.15)}
-
-    dialog{border:none;border-radius:18px;padding:0;overflow:hidden;background:var(--panel);color:var(--text);box-shadow:0 40px 80px rgba(0,0,0,.55)}
-    dialog::backdrop{background:rgba(2,6,12,.6);backdrop-filter:blur(3px)}
-    .modal{min-width:min(820px,95vw)}
-    .modal header{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid var(--ring);background:linear-gradient(180deg,#0e1521,#0c1320)}
-    .modal section{padding:18px}
-
-    .form{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
-    .form .pane{background:var(--soft);border:1px solid var(--ring);border-radius:16px;overflow:hidden}
-    .pane h4{margin:0;padding:12px 14px;border-bottom:1px solid var(--ring);font-size:.95rem;background:linear-gradient(180deg,#172034,#141c2e)}
-    .pane .body{padding:12px 14px}
-    .row{display:flex;gap:10px;margin-bottom:10px}
-    label{display:block;font-size:.86rem;color:#cdd6e5;margin-bottom:6px}
-    input[type="text"], input[type="url"], input[type="number"], select, textarea{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--ring);background:#11192a;color:var(--text);outline:none}
-    input[type="file"]{width:100%}
-
-    .drop{display:grid;place-items:center;height:220px;border:2px dashed var(--ring);border-radius:14px;background:#0d1626}
-    .drop.drag{border-color:#50b7ff;background:#0a1a2b}
-    .hint{font-size:.85rem;color:var(--muted)}
-
-    /* Player */
-    .player-wrap{position:relative;background:#000;border-radius:14px;overflow:hidden;border:1px solid var(--ring)}
-    video{width:100%;height:auto;background:#000}
-    .player-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px}
-
-    .tags{display:flex;flex-wrap:wrap;gap:8px}
-    .tag{font-size:.72rem;padding:6px 8px;border-radius:999px;border:1px solid var(--ring);background:rgba(32,48,71,.4)}
-
-    .toast{position:fixed;right:16px;bottom:16px;z-index:100;background:#0f1929;border:1px solid var(--ring);padding:12px 14px;border-radius:12px;box-shadow:var(--shadow);display:none}
-    .toast.show{display:block}
-  </style>
+<meta charset="UTF-8">
+<title>Premium OTT</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="app">
-    <header>
-      <div class="nav">
-        <div class="brand"><div class="logo"></div><span>My <span style="color:var(--accent)">OTT</span></span></div>
-        <div class="search">
-          <input id="search" type="search" placeholder="Search movies, shows… (title, genre, year)" />
-          <button id="btnUpload" class="btn">➕ Upload</button>
-          <button id="btnAddUrl" class="btn ghost">🔗 Add by URL</button>
-        </div>
-        <div class="chip" title="Local & URL sources supported">Player: HTML5 + HLS</div>
-      </div>
-    </header>
 
-    <main class="main">
-      <div class="toolbar">
-        <div class="chip">Library <span id="count" style="margin-left:6px;font-weight:700"></span></div>
-        <select id="genreFilter" class="btn" style="min-width:160px">
-          <option value="">All Genres</option>
-        </select>
-        <select id="yearFilter" class="btn" style="min-width:140px">
-          <option value="">All Years</option>
-        </select>
-        <button id="btnClear" class="btn ghost" title="Clear filters">Reset Filters</button>
-      </div>
+<header>
+  <h1>KN OTT</h1>
+  <button id="logoutBtn" onclick="logout()">Logout</button>
+</header>
 
-      <section id="grid" class="grid" aria-live="polite"></section>
+<div id="authBox" class="container">
+  <h2 id="formTitle">Login</h2>
 
-      <div id="emptyState" class="empty" style="display:none">
-        <h2>📼 Your library is empty</h2>
-        <p class="hint">Use <b>Upload</b> for local MP4 files or <b>Add by URL</b> for MP4/M3U8 links. Posters are optional.</p>
-      </div>
-    </main>
+  <form id="loginForm">
+    <input type="text" id="loginUsername" placeholder="Username" required><br>
+    <input type="password" id="loginPassword" placeholder="Password" required><br>
+    <button type="submit">Login</button>
+  </form>
+
+  <form id="signupForm" style="display:none;">
+    <input type="text" id="signupUsername" placeholder="Username" required><br>
+    <input type="password" id="signupPassword" placeholder="Password" required><br>
+    <button type="submit">Signup</button>
+  </form>
+
+  <p id="toggle">Don’t have an account? <a onclick="toggleForm()">Signup</a></p>
+</div>
+
+<div id="dashboard" style="display:none;">
+  <div class="home-options">
+    <button onclick="showUploadForm('movie')">Upload Movie</button>
+    <button onclick="showUploadForm('webseries')">Upload Web Series</button>
   </div>
 
-  <!-- Upload Modal -->
-  <dialog id="dlgUpload" class="modal">
-    <header><strong>Upload Movie (Local file)</strong><button class="btn" onclick="dlgUpload.close()">✖</button></header>
-    <section>
-      <form id="formUpload" class="form">
-        <div class="pane">
-          <h4>Choose File</h4>
-          <div class="body">
-            <div id="dropArea" class="drop">
-              <div>
-                <h3 style="margin:0 0 6px">Drag & drop MP4 here</h3>
-                <div class="hint">Or click to select. Browser-native playback works best with MP4/H.264.</div>
-              </div>
-              <input id="fileInput" type="file" accept="video/mp4,video/webm,video/ogg" hidden />
-            </div>
-            <div class="row">
-              <div style="flex:1">
-                <label>Title</label>
-                <input id="titleUpload" type="text" placeholder="Movie title" required />
-              </div>
-              <div style="width:140px">
-                <label>Year</label>
-                <input id="yearUpload" type="number" min="1900" max="2100" placeholder="2025" />
-              </div>
-            </div>
-            <div class="row">
-              <div style="flex:1">
-                <label>Genre</label>
-                <input id="genreUpload" type="text" placeholder="Action, Drama…" />
-              </div>
-              <div style="flex:1">
-                <label>Subtitle (VTT URL, optional)</label>
-                <input id="subUrlUpload" type="url" placeholder="https://…/subtitles.vtt" />
-              </div>
-            </div>
-            <div class="row">
-              <div style="flex:1">
-                <label>Poster (optional)</label>
-                <input id="posterUpload" type="file" accept="image/*" />
-              </div>
-              <div style="width:200px;align-self:flex-end">
-                <button class="btn primary" type="submit">Add to Library</button>
-              </div>
-            </div>
-            <p class="hint">Local uploads are <b>kept until you close/reload</b> this page. For permanent entries, use “Add by URL”.</p>
-          </div>
-        </div>
-        <div class="pane">
-          <h4>Preview</h4>
-          <div class="body">
-            <div class="player-wrap">
-              <video id="previewVideo" controls playsinline></video>
-            </div>
-            <div class="player-meta">
-              <div>
-                <div id="previewTitle" class="title">—</div>
-                <div id="previewSub" class="sub">No file selected</div>
-              </div>
-              <div class="tags">
-                <span id="previewBadge" class="tag">LOCAL</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </form>
-    </section>
-  </dialog>
+  <input type="text" id="searchInput" placeholder="Search by title or category" oninput="searchContent()" style="width:95%; margin:10px auto; display:block; padding:8px; border-radius:5px; border:none; background:#333; color:#fff;">
 
-  <!-- Add by URL Modal -->
-  <dialog id="dlgUrl" class="modal">
-    <header><strong>Add by URL (MP4 or M3U8)</strong><button class="btn" onclick="dlgUrl.close()">✖</button></header>
-    <section>
-      <form id="formUrl" class="form">
-        <div class="pane">
-          <h4>Stream Details</h4>
-          <div class="body">
-            <div class="row">
-              <div style="flex:1">
-                <label>Title</label>
-                <input id="titleUrl" type="text" placeholder="Movie title" required />
-              </div>
-              <div style="width:140px">
-                <label>Year</label>
-                <input id="yearUrl" type="number" min="1900" max="2100" placeholder="2024" />
-              </div>
-            </div>
-            <div class="row">
-              <div style="flex:1">
-                <label>Video URL (.mp4 or .m3u8)</label>
-                <input id="videoUrl" type="url" placeholder="https://…/movie.mp4 or …/index.m3u8" required />
-              </div>
-            </div>
-            <div class="row">
-              <div style="flex:1">
-                <label>Poster URL (optional)</label>
-                <input id="posterUrl" type="url" placeholder="https://…/poster.jpg" />
-              </div>
-              <div style="flex:1">
-                <label>Genre</label>
-                <input id="genreUrl" type="text" placeholder="Action, Drama…" />
-              </div>
-            </div>
-            <div class="row">
-              <div style="flex:1">
-                <label>Subtitle (WebVTT URL, optional)</label>
-                <input id="subUrl" type="url" placeholder="https://…/subtitles.vtt" />
-              </div>
-              <div style="width:200px;align-self:flex-end">
-                <button class="btn primary" type="submit">Save</button>
-              </div>
-            </div>
-            <p class="hint">URL entries are saved in your browser (localStorage). No server needed.</p>
-          </div>
-        </div>
-        <div class="pane">
-          <h4>Quick Test Player</h4>
-          <div class="body">
-            <div class="player-wrap">
-              <video id="testVideo" controls playsinline></video>
-            </div>
-            <div class="player-meta"><div class="sub">Paste URL above and press ▶</div></div>
-          </div>
-        </div>
-      </form>
-    </section>
-  </dialog>
+  <div id="adminPanel" style="display:none;">
+    <h2>Admin Panel</h2>
 
-  <!-- Player Modal -->
-  <dialog id="dlgPlayer" class="modal" style="max-width:min(1100px,96vw)">
-    <header><strong id="playTitle">Now Playing</strong><button class="btn" onclick="closePlayer()">✖</button></header>
-    <section>
-      <div class="player-wrap">
-        <video id="video" controls playsinline></video>
-      </div>
-      <div class="player-meta">
-        <div>
-          <div id="playMeta" class="sub">—</div>
-          <div class="tags" id="playTags"></div>
-        </div>
-        <div>
-          <button class="btn" onclick="video.requestFullscreen?.()">⛶ Fullscreen</button>
-        </div>
-      </div>
-    </section>
-  </dialog>
+    <form id="movieForm" style="display:none;">
+      <input type="text" id="movieTitle" placeholder="Movie Title" required><br>
+      <select id="movieCategory" required>
+        <option value="">Select Category</option>
+        <option>Action</option>
+        <option>Drama</option>
+        <option>Comedy</option>
+        <option>Horror</option>
+        <option>Thriller</option>
+      </select><br>
+      <input type="file" id="moviePoster" accept="image/*" required><br>
+      <input type="file" id="movieFile" accept="video/mp4,video/x-matroska" required><br>
+      <button type="submit">Add Movie</button>
+    </form>
 
-  <div id="toast" class="toast"></div>
+    <form id="webseriesForm" style="display:none;">
+      <input type="text" id="wsTitle" placeholder="Web Series Title" required><br>
+      <select id="wsCategory" required>
+        <option value="">Select Category</option>
+        <option>Action</option>
+        <option>Drama</option>
+        <option>Comedy</option>
+        <option>Horror</option>
+        <option>Thriller</option>
+      </select><br>
+      <input type="file" id="wsBanner" accept="image/*" required><br>
+      <select id="wsEpisodesCount" onchange="generateEpisodes()" required>
+        <option value="">Select number of episodes</option>
+        ${[...Array(20).keys()].map(i=>`<option>${i+1}</option>`).join('')}
+      </select><br>
+      <div id="episodesContainer"></div>
+      <button type="submit">Add Web Series</button>
+    </form>
+  </div>
 
-  <script>
-    // --- Utilities ---
-    const $ = s => document.querySelector(s);
-    const $$ = s => Array.from(document.querySelectorAll(s));
-    const toast = (msg, ms=2200) => { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), ms); }
-    const uid = () => Math.random().toString(36).slice(2,9);
+  <div class="movie-grid" id="contentList"></div>
+</div>
 
-    const store = {
-      get(){ try { return JSON.parse(localStorage.getItem('ott.library')||'[]'); } catch { return [] } },
-      set(list){ localStorage.setItem('ott.library', JSON.stringify(list)); syncFilters(list); render(list); },
-      add(item){ const list = store.get(); list.unshift(item); store.set(list); toast('Saved to library'); },
-      remove(id){ const list = store.get().filter(x=>x.id!==id); store.set(list); toast('Removed'); }
-    }
+<div class="popup" id="popupPlayer">
+  <div class="popup-content">
+    <span class="close" onclick="closePopup()">&times;</span>
+    <video controls id="popupVideo"></video>
+  </div>
+</div>
 
-    // Memory-only items (local files for this session)
-    const sessionItems = new Map();
-
-    // --- Rendering ---
-    function render(list = store.get()){
-      const term = $('#search').value.trim().toLowerCase();
-      const g = $('#genreFilter').value; const y = $('#yearFilter').value;
-      let items = [...(Array.from(sessionItems.values())), ...list];
-      if(term) items = items.filter(m => (m.title+" "+(m.genre||'')+" "+(m.year||'')).toLowerCase().includes(term));
-      if(g) items = items.filter(m => (m.genre||'').toLowerCase().split(',').map(s=>s.trim()).includes(g.toLowerCase()));
-      if(y) items = items.filter(m => String(m.year)===y);
-
-      $('#count').textContent = items.length + ' items';
-      const grid = $('#grid'); grid.innerHTML = '';
-      $('#emptyState').style.display = items.length? 'none':'block';
-
-      for(const m of items){
-        const card = document.createElement('article'); card.className = 'card'; card.title = m.title;
-        const img = document.createElement('div'); img.className = 'poster'; img.style.backgroundImage = `url('${m.poster||placeholder(m.title)}')`;
-        const meta = document.createElement('div'); meta.className = 'meta';
-        meta.innerHTML = `<div class="title">${m.title}</div><div class="sub">${m.genre||'—'}${m.year? ' • '+m.year:''}</div>`;
-        const badge = document.createElement('div'); badge.className = 'badge'; badge.textContent = m.srcType === 'url' ? 'URL' : 'LOCAL';
-        const dur = document.createElement('div'); dur.className = 'duration'; dur.textContent = m.duration || '';
-        card.append(img, meta, badge, dur);
-        card.addEventListener('click', ()=> openPlayer(m));
-        grid.appendChild(card);
-      }
-    }
-
-    function placeholder(text){
-      const bg = '#0f1729';
-      const svg = encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='400' height='600'><rect width='100%' height='100%' fill='${bg}'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23a8b3c9' font-family='Inter' font-size='28'>${(text||'No Poster').slice(0,24)}</text></svg>`);
-      return `data:image/svg+xml;utf8,${svg}`
-    }
-
-    function syncFilters(list = store.get()){
-      const all = [...(Array.from(sessionItems.values())), ...list];
-      const genres = Array.from(new Set(all.flatMap(m=> (m.genre||'').split(',').map(s=>s.trim()).filter(Boolean)))).sort();
-      const years = Array.from(new Set(all.map(m=> m.year).filter(Boolean))).sort((a,b)=>b-a);
-      const gf = $('#genreFilter'); const yf = $('#yearFilter');
-      const gSel = gf.value; const ySel = yf.value;
-      gf.innerHTML = '<option value="">All Genres</option>' + genres.map(g=>`<option>${g}</option>`).join('');
-      yf.innerHTML = '<option value="">All Years</option>' + years.map(y=>`<option>${y}</option>`).join('');
-      if(gSel) gf.value = gSel; if(ySel) yf.value = ySel;
-    }
-
-    // --- Player ---
-    const dlgPlayer = $('#dlgPlayer');
-    const video = $('#video');
-    let currentItem = null; let currentHls = null;
-
-    function setupVideo(el, src, subUrl){
-      // Clear old sources/tracks
-      el.pause(); el.removeAttribute('src');
-      while (el.firstChild) el.removeChild(el.firstChild);
-      if(currentHls){ currentHls.destroy(); currentHls = null; }
-
-      if(src.endsWith('.m3u8') && window.Hls && Hls.isSupported()){
-        const hls = new Hls(); currentHls = hls; hls.loadSource(src); hls.attachMedia(el);
-        hls.on(Hls.Events.MANIFEST_PARSED,()=> el.play().catch(()=>{}));
-      } else if (src.endsWith('.m3u8') && el.canPlayType('application/vnd.apple.mpegurl')){
-        el.src = src; el.addEventListener('loadedmetadata', ()=> el.play().catch(()=>{}));
-      } else {
-        const source = document.createElement('source'); source.src = src; source.type = 'video/mp4'; el.appendChild(source);
-        el.load(); el.play().catch(()=>{});
-      }
-
-      if(subUrl){ const track = document.createElement('track'); track.kind='subtitles'; track.label='Subtitles'; track.srclang='en'; track.src=subUrl; track.default=true; el.appendChild(track); }
-    }
-
-    function openPlayer(m){
-      currentItem = m;
-      $('#playTitle').textContent = m.title;
-      $('#playMeta').textContent = `${m.genre||'—'}${m.year? ' • '+m.year:''}`;
-      const tags = $('#playTags'); tags.innerHTML='';
-      const tag = (t)=>{ const s=document.createElement('span'); s.className='tag'; s.textContent=t; return s; }
-      tags.append(tag(m.srcType === 'url' ? 'URL' : 'LOCAL'));
-      if(m.subUrl) tags.append(tag('Subtitles'));
-      setupVideo(video, m.src, m.subUrl);
-      dlgPlayer.showModal();
-    }
-    function closePlayer(){ video.pause(); if(currentHls){ currentHls.destroy(); currentHls=null;} dlgPlayer.close(); }
-
-    // --- Upload (Local File) ---
-    const dlgUpload = $('#dlgUpload');
-    const drop = $('#dropArea'); const fileInput = $('#fileInput');
-    const previewVideo = $('#previewVideo');
-    let selectedFile = null; let selectedPosterDataURL = null;
-
-    const openUpload = ()=>{ dlgUpload.showModal(); }
-
-    drop.addEventListener('click',()=> fileInput.click());
-    drop.addEventListener('dragover', e=>{ e.preventDefault(); drop.classList.add('drag'); });
-    drop.addEventListener('dragleave', ()=> drop.classList.remove('drag'));
-    drop.addEventListener('drop', e=>{ e.preventDefault(); drop.classList.remove('drag'); if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
-    fileInput.addEventListener('change', e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); });
-
-    async function handleFile(file){
-      selectedFile = file; const url = URL.createObjectURL(file);
-      $('#previewTitle').textContent = file.name;
-      $('#previewSub').textContent = `${(file.type||'video')}, ${(file.size/1e6).toFixed(1)} MB`;
-      setupVideo(previewVideo, url);
-      // Try to grab a frame as poster
-      try{
-        await previewVideo.play(); previewVideo.pause();
-        const canvas = document.createElement('canvas'); canvas.width = 400; canvas.height = 600;
-        const ctx = canvas.getContext('2d');
-        // draw frame centered (letterbox handling)
-        const vw = previewVideo.videoWidth, vh = previewVideo.videoHeight;
-        const targetW = 400, targetH = 600; const vr = vw/vh; const tr = targetW/targetH;
-        let dw, dh, dx, dy; if(vr>tr){ dh = targetH; dw = dh*vr; dx = (targetW-dw)/2; dy = 0; } else { dw = targetW; dh = dw/vr; dx = 0; dy = (targetH-dh)/2; }
-        ctx.fillStyle = '#0f1729'; ctx.fillRect(0,0,targetW,targetH);
-        ctx.drawImage(previewVideo, dx, dy, dw, dh);
-        selectedPosterDataURL = canvas.toDataURL('image/jpeg', .75);
-      }catch{}
-    }
-
-    $('#posterUpload').addEventListener('change', e=>{
-      const file = e.target.files[0]; if(!file) return; const r = new FileReader(); r.onload = ()=> selectedPosterDataURL = r.result; r.readAsDataURL(file);
-    });
-
-    $('#formUpload').addEventListener('submit', e=>{
-      e.preventDefault(); if(!selectedFile){ toast('Pick a video first'); return; }
-      const objUrl = URL.createObjectURL(selectedFile);
-      const item = {
-        id: uid(),
-        title: $('#titleUpload').value || selectedFile.name,
-        year: Number($('#yearUpload').value)||'',
-        genre: $('#genreUpload').value,
-        src: objUrl,
-        srcType: 'local',
-        poster: selectedPosterDataURL,
-        subUrl: $('#subUrlUpload').value||''
-      };
-      sessionItems.set(item.id, item); syncFilters(); render(); dlgUpload.close(); toast('Added local item (session only)');
-    });
-
-    // --- Add by URL ---
-    const dlgUrl = $('#dlgUrl');
-    const testVideo = $('#testVideo');
-
-    $('#formUrl').addEventListener('submit', e=>{
-      e.preventDefault();
-      const item = {
-        id: uid(),
-        title: $('#titleUrl').value,
-        year: Number($('#yearUrl').value)||'',
-        genre: $('#genreUrl').value,
-        src: $('#videoUrl').value.trim(),
-        srcType: 'url',
-        poster: $('#posterUrl').value.trim()||'',
-        subUrl: $('#subUrl').value.trim()||''
-      };
-      store.add(item); dlgUrl.close();
-    });
-
-    // Quick test for URL
-    $('#videoUrl').addEventListener('change', ()=> tryTest());
-    $('#videoUrl').addEventListener('blur', ()=> tryTest());
-    function tryTest(){
-      const url = $('#videoUrl').value.trim(); if(!url) return;
-      setupVideo(testVideo, url);
-    }
-
-    // --- Search & Filters ---
-    $('#search').addEventListener('input', ()=> render());
-    $('#genreFilter').addEventListener('change', ()=> render());
-    $('#yearFilter').addEventListener('change', ()=> render());
-    $('#btnClear').addEventListener('click', ()=>{ $('#search').value=''; $('#genreFilter').value=''; $('#yearFilter').value=''; render(); })
-
-    // --- Actions ---
-    $('#btnUpload').addEventListener('click', openUpload);
-    $('#btnAddUrl').addEventListener('click', ()=> dlgUrl.showModal());
-
-    // Keyboard: close player with Esc
-    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && dlgPlayer.open) closePlayer(); });
-
-    // Init
-    syncFilters(); render();
-  </script>
+<script src="script.js"></script>
 </body>
 </html>
